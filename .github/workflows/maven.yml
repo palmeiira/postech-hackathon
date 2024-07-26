@@ -1,4 +1,4 @@
-name: Java Build, Test and create Jacoco Report
+name: Build, test and create test report
 
 on:
   push:
