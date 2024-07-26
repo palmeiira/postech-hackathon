@@ -23,6 +23,7 @@ public class AppointmentController {
 
     @PutMapping("/{appointmentId}/confirm")
     public ResponseEntity<ApiResponse> updateAppointmentStatus(@PathVariable Long appointmentId, @RequestBody ConfirmAppointmentRequest status) {
+        System.out.println("Mock");
         ApiResponse response = new ApiResponse(appointmentService.updateAppointmentStatus(appointmentId, status), null, true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
