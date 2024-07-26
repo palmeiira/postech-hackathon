@@ -28,7 +28,7 @@ name: Deploy to Amazon ECS
 
 on:
   workflow_run:
-    workflows: [Build, test and create test report"]
+    workflows: ["Build, test and create test report"]
     types:
       - completed
 env:
