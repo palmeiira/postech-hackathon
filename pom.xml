@@ -126,6 +126,7 @@
                         <exclude>**/*JwtUtil.*</exclude>
                         <exclude>**/*MethodArgumentNotValidExceptionHandler.*</exclude>
                         <exclude>**/*UnhandledExceptionHandler.*</exclude>
+                        <exclude>**/*HandledExceptionHandler.*</exclude>
                     </excludes>
                 </configuration>
                 <executions>

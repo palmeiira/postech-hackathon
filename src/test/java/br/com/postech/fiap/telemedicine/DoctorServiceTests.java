@@ -18,12 +18,11 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 class DoctorServiceTests {
 
@@ -331,6 +330,70 @@ class DoctorServiceTests {
                 UnhandledException.class,
                 () -> doctorService.deleteSlots(1L, null)
         );
+    }
+
+    @Test
+    public void testDeleteSlots_success() {
+        Long doctorId = 1L;
+        List<Long> slotIds = Arrays.asList(1L, 2L);
+
+        Slot slot1 = new Slot();
+        slot1.setId(1L);
+        Slot slot2 = new Slot();
+        slot2.setId(2L);
+        Slot slot3 = new Slot();
+        slot3.setId(3L);
+
+        Doctor doctor = new Doctor();
+        doctor.setId(doctorId);
+        doctor.setSlots(new ArrayList<>(Arrays.asList(slot1, slot2, slot3)));
+
+        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
+        when(doctorRepository.save(any(Doctor.class))).thenReturn(doctor);
+
+        Doctor updatedDoctor = doctorService.deleteSlots(doctorId, slotIds);
+
+        assertNotNull(updatedDoctor);
+        assertFalse(updatedDoctor.getSlots().contains(slot1));
+        assertFalse(updatedDoctor.getSlots().contains(slot2));
+        assertTrue(updatedDoctor.getSlots().contains(slot3));
+
+        verify(doctorRepository, times(1)).findById(doctorId);
+        verify(doctorRepository, times(1)).save(any(Doctor.class));
+    }
+
+    @Test
+    public void testDeleteSlots_doctorNotFound() {
+        Long doctorId = 1L;
+        List<Long> slotIds = Arrays.asList(1L, 2L);
+
+        when(doctorRepository.findById(doctorId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(HandledException.class, () -> {
+            doctorService.deleteSlots(doctorId, slotIds);
+        });
+
+        assertEquals("Couldn't find Doctor with ID = " + doctorId, exception.getMessage());
+
+        verify(doctorRepository, times(1)).findById(doctorId);
+        verify(doctorRepository, never()).save(any(Doctor.class));
+    }
+
+    @Test
+    public void testDeleteSlots_unhandledException() {
+        Long doctorId = 1L;
+        List<Long> slotIds = Arrays.asList(1L, 2L);
+
+        when(doctorRepository.findById(doctorId)).thenThrow(new RuntimeException("Unexpected error"));
+
+        Exception exception = assertThrows(UnhandledException.class, () -> {
+            doctorService.deleteSlots(doctorId, slotIds);
+        });
+
+        assertEquals("Unexpected error", exception.getMessage());
+
+        verify(doctorRepository, times(1)).findById(doctorId);
+        verify(doctorRepository, never()).save(any(Doctor.class));
     }
 
 }

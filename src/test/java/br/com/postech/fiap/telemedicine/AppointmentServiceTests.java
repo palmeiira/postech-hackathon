@@ -22,6 +22,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import javax.print.Doc;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -208,5 +210,44 @@ public class AppointmentServiceTests {
         Exception exception = assertThrows(HandledException.class, () -> {
             appointmentService.updateAppointmentStatus(appointmentId, dto);
         });
+    }
+
+    @Test
+    public void testFindAppointments_withDoctorId() {
+        Long doctorId = 1L;
+        List<Appointment> expectedAppointments = Arrays.asList(new Appointment(), new Appointment());
+
+        when(appointmentRepository.findByDoctorId(doctorId)).thenReturn(expectedAppointments);
+
+        List<Appointment> actualAppointments = appointmentService.findAppointments(doctorId, null);
+
+        assertEquals(expectedAppointments, actualAppointments);
+        verify(appointmentRepository, times(1)).findByDoctorId(doctorId);
+        verify(appointmentRepository, never()).findByPatientId(anyLong());
+    }
+
+    @Test
+    public void testFindAppointments_withPatientId() {
+        Long patientId = 1L;
+        List<Appointment> expectedAppointments = Arrays.asList(new Appointment(), new Appointment());
+
+        when(appointmentRepository.findByPatientId(patientId)).thenReturn(expectedAppointments);
+
+        List<Appointment> actualAppointments = appointmentService.findAppointments(null, patientId);
+
+        assertEquals(expectedAppointments, actualAppointments);
+        verify(appointmentRepository, times(1)).findByPatientId(patientId);
+        verify(appointmentRepository, never()).findByDoctorId(anyLong());
+    }
+
+    @Test
+    public void testFindAppointments_withNoParameters() {
+        Exception exception = assertThrows(HandledException.class, () -> {
+            appointmentService.findAppointments(null, null);
+        });
+
+        assertEquals("At least one parameter is necessary.", exception.getMessage());
+        verify(appointmentRepository, never()).findByDoctorId(anyLong());
+        verify(appointmentRepository, never()).findByPatientId(anyLong());
     }
 }
