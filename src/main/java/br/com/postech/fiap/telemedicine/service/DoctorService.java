@@ -81,7 +81,7 @@ public class DoctorService {
 
     public Doctor addNewRating(Long doctorId, Rating r) {
         try {
-            System.out.println("Test");
+//            System.out.println("Test");
             Doctor doctor = findById(doctorId);
             doctor.addRating(r);
             r.setDoctor(doctor);
