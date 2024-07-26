@@ -12,6 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -96,11 +97,13 @@ public class DoctorService {
     public Doctor deleteSlots(Long doctorId, List<Long> slotIds) {
         try {
             Doctor doctor = findById(doctorId);
+            List<Slot> slotsToRemove = new ArrayList<>();
             for (Slot slot : doctor.getSlots()) {
                 if (slotIds.contains(slot.getId())) {
-                    doctor.removeSlot(slot);
+                    slotsToRemove.add(slot);
                 }
             }
+            doctor.removeSlots(slotsToRemove);
             return doctorRepository.save(doctor);
         } catch (HandledException he) {
             throw he;

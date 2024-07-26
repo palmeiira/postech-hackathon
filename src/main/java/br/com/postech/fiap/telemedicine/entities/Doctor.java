@@ -46,8 +46,10 @@ public class Doctor extends User {
         slots.add(slot);
     }
 
-    public void removeSlot(Slot slot) {
-        slots.remove(slot);
+    public void removeSlots(List<Slot> slots) {
+        if (slots.isEmpty())
+            return;
+        this.slots.removeAll(slots);
     }
 
     public void addRating(Rating r) {
