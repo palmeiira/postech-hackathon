@@ -21,6 +21,7 @@ public class Doctor extends User {
     private String specialty;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Slot> slots;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)

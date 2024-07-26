@@ -26,4 +26,12 @@ public class AppointmentController {
         ApiResponse response = new ApiResponse(appointmentService.updateAppointmentStatus(appointmentId, status), null, true);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse> findAppointments(
+            @RequestParam(required = false) Long doctorId,
+            @RequestParam(required = false) Long patientId) {
+        ApiResponse response = new ApiResponse(appointmentService.findAppointments(doctorId, patientId), null, true);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
