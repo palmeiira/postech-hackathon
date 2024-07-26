@@ -11,6 +11,7 @@ import br.com.postech.fiap.telemedicine.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -78,6 +79,18 @@ public class AppointmentService {
             throw he;
         } catch (Exception e) {
             throw new UnhandledException(e.getMessage(), e.getCause());
+        }
+    }
+
+    public List<Appointment> findAppointments(Long doctorId, Long patientId) {
+        if (doctorId == null && patientId == null) {
+            throw new HandledException("At least one parameter is necessary.");
+        }
+
+        if (doctorId != null) {
+                return appointmentRepository.findByDoctorId(doctorId);
+        } else {
+            return appointmentRepository.findByPatientId(patientId);
         }
     }
 }
