@@ -1,5 +1,6 @@
 package br.com.postech.fiap.telemedicine;
 
+import br.com.postech.fiap.telemedicine.dto.ConfirmAppointmentRequest;
 import br.com.postech.fiap.telemedicine.dto.CreateAppointmentRequest;
 import br.com.postech.fiap.telemedicine.entities.Appointment;
 import br.com.postech.fiap.telemedicine.entities.Doctor;
@@ -25,8 +26,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class AppointmentServiceTests {
     @Mock
@@ -117,5 +117,96 @@ public class AppointmentServiceTests {
         dto.setSlotId(1L);
         when(doctorService.findById(1L)).thenThrow(NullPointerException.class);
         assertThrows(UnhandledException.class, () -> appointmentService.registerAppointment(dto));
+    }
+
+    @Test
+    void updateStatus_unhandled_exception() {
+        CreateAppointmentRequest dto = new CreateAppointmentRequest();
+        dto.setDoctorId(1L);
+        dto.setPatientId(1L);
+        dto.setSlotId(1L);
+        when(doctorService.findById(1L)).thenThrow(NullPointerException.class);
+        assertThrows(UnhandledException.class, () -> appointmentService.registerAppointment(dto));
+    }
+
+    @Test
+    public void testUpdateAppointmentStatus_Confirmed() {
+        Long appointmentId = 1L;
+        ConfirmAppointmentRequest dto = new ConfirmAppointmentRequest();
+        dto.setStatus(AppointmentStatus.CONFIRMED);
+
+        Appointment appointment = new Appointment();
+        Slot slot = new Slot();
+        appointment.setSlot(slot);
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(any(Appointment.class))).thenReturn(appointment);
+        doNothing().when(slotService).save(any(Slot.class));
+
+        Appointment updatedAppointment = appointmentService.updateAppointmentStatus(appointmentId, dto);
+
+        assertNotNull(updatedAppointment);
+        assertEquals(AppointmentStatus.CONFIRMED, updatedAppointment.getStatus());
+        assertEquals(SlotStatus.SCHEDULED, updatedAppointment.getSlot().getStatus());
+        assertNotNull(updatedAppointment.getMeetingLink());
+        verify(slotService, times(1)).save(any(Slot.class));
+        verify(appointmentRepository, times(1)).save(any(Appointment.class));
+    }
+
+    @Test
+    public void testUpdateAppointmentStatus_Canceled() {
+        Long appointmentId = 1L;
+        ConfirmAppointmentRequest dto = new ConfirmAppointmentRequest();
+        dto.setStatus(AppointmentStatus.CANCELED);
+
+        Appointment appointment = new Appointment();
+        Slot slot = new Slot();
+        appointment.setSlot(slot);
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(any(Appointment.class))).thenReturn(appointment);
+        doNothing().when(slotService).save(any(Slot.class));
+
+        Appointment updatedAppointment = appointmentService.updateAppointmentStatus(appointmentId, dto);
+
+        assertNotNull(updatedAppointment);
+        assertEquals(AppointmentStatus.CANCELED, updatedAppointment.getStatus());
+        assertEquals(SlotStatus.FREE, updatedAppointment.getSlot().getStatus());
+        verify(slotService, times(1)).save(any(Slot.class));
+        verify(appointmentRepository, times(1)).save(any(Appointment.class));
+    }
+
+    @Test
+    public void testUpdateAppointmentStatus_InvalidStatus() {
+        Long appointmentId = 1L;
+        ConfirmAppointmentRequest dto = new ConfirmAppointmentRequest();
+        dto.setStatus(AppointmentStatus.SCHEDULED);
+
+        Appointment appointment = new Appointment();
+        Slot slot = new Slot();
+        appointment.setSlot(slot);
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(appointment));
+
+        Exception exception = assertThrows(HandledException.class, () -> {
+            appointmentService.updateAppointmentStatus(appointmentId, dto);
+        });
+
+        String expectedMessage = "Invalid status while updating Appointment.";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
+        verify(slotService, times(0)).save(any(Slot.class));
+        verify(appointmentRepository, times(0)).save(any(Appointment.class));
+    }
+
+    @Test
+    public void testUpdateAppointmentStatus_AppointmentNotFound() {
+        Long appointmentId = 1L;
+        ConfirmAppointmentRequest dto = new ConfirmAppointmentRequest();
+        dto.setStatus(AppointmentStatus.CONFIRMED);
+
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(HandledException.class, () -> {
+            appointmentService.updateAppointmentStatus(appointmentId, dto);
+        });
     }
 }
